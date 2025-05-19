@@ -1,6 +1,6 @@
-numpy==1.26.0
+numpy>=1.26,<1.27
 openai==0.28.1
-pysimplegui==4.60.5
+PySimpleGUI==5.0.8.3
 soundcard==0.4.2
 soundfile==0.12.1
 loguru==0.7.2
