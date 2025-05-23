@@ -92,14 +92,14 @@ while True:
         analyzed_text_label.update(audio_transcript)
 
         # Generate quick answer:
-        quick_chat_gpt_answer.update("Chatgpt is working...")
+        quick_chat_gpt_answer.update("Генерация ответа...")
         WINDOW.perform_long_operation(
             lambda: llm.generate_answer(audio_transcript, short_answer=True, temperature=0),
             "-CHAT_GPT SHORT ANSWER-",
         )
 
         # Generate full answer:
-        full_chat_gpt_answer.update("Chatgpt is working...")
+        full_chat_gpt_answer.update("Генерация ответа...")
         WINDOW.perform_long_operation(
             lambda: llm.generate_answer(audio_transcript, short_answer=False, temperature=0.7),
             "-CHAT_GPT LONG ANSWER-",

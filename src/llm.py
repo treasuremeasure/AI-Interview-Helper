@@ -1,26 +1,32 @@
 import requests
+import whisper
 from loguru import logger
 
 from src.constants import INTERVIEW_POSTION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
-    f"You are interviewing for a {INTERVIEW_POSTION} position.\n"
-    "You will receive an audio transcription of the question. "
-    "It may not be complete. You need to understand the question and write an answer to it.\n"
+    f"У тебя берут интервью на позицию {INTERVIEW_POSTION}.\n"
+    "Ты получишь транскрипцию вопроса. "
+    "Она может быть не полной и не совсем правильной, но ты должен понять вопрос и ответить на него.\n"
 )
-SHORTER_INSTRUCT = "Concisely respond, limiting your answer to 70 words."
-LONGER_INSTRUCT  = "Before answering, take a deep breath and think step by step. Answer in no more than 150 words."
+SHORTER_INSTRUCT = "Отвечай кратко, не более 70 слов."
+LONGER_INSTRUCT  = "Перед ответом надо немного подумать и ответить не более 150 слов."
+
+_WHISPER_MODEL = whisper.load_model("small")  
 
 def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     """
-    (опционально) — оставляем OpenAI Whisper, если у вас есть ключ.
-    Иначе сюда можно тоже в будущем зашить локальный whisper.cpp.
+    Локальная транскрипция с помощью библиотеки openai-whisper.
+
+    Args:
+        path_to_file (str): Путь до .wav-файла для транскрипции.
+
+    Returns:
+        str: Расшифрованный текст.
     """
-    import openai
-    openai.api_key = ""  # или берём из const.OPENAI_API_KEY
-    with open(path_to_file, "rb") as audio_file:
-        resp = openai.Audio.translate("whisper-1", audio_file)
-    return resp["text"]
+    # вынужденно отключаем fp16 на CPU / WSL, если нет GPU
+    result = _WHISPER_MODEL.transcribe(path_to_file, fp16=False)
+    return result["text"]
 
 def generate_answer(transcript: str, short_answer: bool = True, temperature: float = 0.7) -> str:
     # собираем системную часть

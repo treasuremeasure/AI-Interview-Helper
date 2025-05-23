@@ -6,7 +6,9 @@ from loguru import logger
 
 from src.constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
 
-SPEAKER_ID = str(sc.default_speaker().name)
+'''SPEAKER_ID = str(sc.default_speaker().name)'''    #спикер
+
+MIC_ID = str(sc.default_microphone().name)
 
 
 def record_batch(record_sec: int = RECORD_SEC) -> np.ndarray:
@@ -27,8 +29,8 @@ def record_batch(record_sec: int = RECORD_SEC) -> np.ndarray:
     """
     logger.debug("Recording for {record_sec} second(s)...")
     with sc.get_microphone(
-        id=SPEAKER_ID,
-        include_loopback=True,
+        id=MIC_ID,
+        #include_loopback=True,
     ).recorder(samplerate=SAMPLE_RATE) as mic:
         audio_sample = mic.record(numframes=SAMPLE_RATE * record_sec)
     return audio_sample
