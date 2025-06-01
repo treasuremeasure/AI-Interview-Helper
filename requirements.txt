@@ -3,4 +3,5 @@ PySimpleGUI==5.0.8.3
 soundcard==0.4.2
 soundfile==0.12.1
 loguru==0.7.2
-whisper==1.16.1
+git+https://github.com/openai/whisper.git
+requests==2.31.0

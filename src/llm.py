@@ -16,7 +16,7 @@ SYSTEM_PROMPT = (
     "4) Сопровождает разработку → отвечает на вопросы, ведёт backlog, проверяет соответствие реализованного функций требованиям.\n"
     "5) Поддерживает продукт → анализирует метрики, готовит изменения.\n"
 
-    "Его типичные стек технологий:\n"
+    "Его типичный стек технологий:\n"
     "Документация/управление: Confluence, Jira / YouTrack, Markdown, ГОСТ 34-формы.\n"
     "Моделирование: BPMN 2.0, UML, ER-диаграммы (Enterprise Architect, draw.io)\n"
     "Базы данных: PostgreSQL, MySQL, Oracle.\n"
@@ -33,7 +33,7 @@ SYSTEM_PROMPT = (
     
 )
 
-ANSWER_INSTRUCT = "Перед ответом надо немного подумать и ответить не более 150 слов."
+ANSWER_INSTRUCT = "Нужно ответить не более 150 слов."
 
 _WHISPER_MODEL = whisper.load_model("small")  
 
@@ -65,8 +65,10 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
         "temperature": temperature,
     }
 
-    logger.debug(f"Calling llama-server at {LLAMA_SERVER_URL} …")
-    res = requests.post(f"{LLAMA_SERVER_URL}/v1/chat/completions", json=payload)
+    url = f"{LLAMA_SERVER_URL.rstrip('/')}/v1/chat/completions"
+    logger.debug(f"Calling llama-server at {url}")
+
+    res = requests.post(url, json=payload, timeout=30)
     res.raise_for_status()
     data = res.json()
 
