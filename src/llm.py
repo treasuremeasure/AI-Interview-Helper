@@ -1,41 +1,31 @@
 import requests
 import whisper
 from loguru import logger
+import json
 
 from src.constants import INTERVIEW_POSTION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
-    f"У тебя берут интервью на позицию {INTERVIEW_POSTION} в России.\n"
-    "Ты получишь транскрипцию вопроса. "
-    "Она может быть не полной и не совсем правильной, но ты должен понять вопрос и ответить на него.\n"
-    "Системный аналитик — мост между бизнес-целями и разработкой: формулирует, уточняет и контролирует требования так, чтобы команда могла быстро создать нужный продукт.\n"
-    "Он\n:" 
-    "1) Собирает требования → интервью, воркшопы, анализ документов.\n"
-    "2) Формализует → BPMN/UML-диаграммы, user stories, спецификации (часто по ГОСТ 34).\n"
-    "3) Согласовывает → обсуждает ТЗ с заказчиком, архитекторами, UX, QA.\n"
-    "4) Сопровождает разработку → отвечает на вопросы, ведёт backlog, проверяет соответствие реализованного функций требованиям.\n"
-    "5) Поддерживает продукт → анализирует метрики, готовит изменения.\n"
-
-    "Его типичный стек технологий:\n"
-    "Документация/управление: Confluence, Jira / YouTrack, Markdown, ГОСТ 34-формы.\n"
-    "Моделирование: BPMN 2.0, UML, ER-диаграммы (Enterprise Architect, draw.io)\n"
-    "Базы данных: PostgreSQL, MySQL, Oracle.\n"
-    "API & интеграции: REST/JSON, SOAP/XML, OpenAPI/Swagger, Postman, Kafka, RabbitMQ.\n"
-
-    "Тебе могут задать простые вопросы, например:\n"
-    "1) В чем отличие BPMN от UML?\n"
-    "2) Что такое REST API?\n"
-    "3) Что такое Kafka?\n"
-    "4) Что такое RabbitMQ?\n"
-
-    "А также могут задать непростые задачи, например:\n"
-    "1) Опиши как бы ты реализовал корпоративный чат с нуля. Как будешь масштабировать систему при росте нагрузки до 10к RPS.\n"
-    
+    f"You are being interviewed for the position of {INTERVIEW_POSTION} in Russia.\n"
+    "You will receive a transcription of a question. "
+    "It might be incomplete or somewhat inaccurate, but you must understand the question and answer it.\n"
+    "A systems analyst is a bridge between business goals and development: they formulate, clarify, and control requirements so that the team can quickly build the right product.\n"
+    "They:\n"
+    "1) Gather requirements → interviews, workshops, document analysis.\n"
+    "2) Formalize → BPMN/UML diagrams, user stories, specifications (often according to GOST 34).\n"
+    "3) Coordinate → discuss requirements with stakeholders, architects, UX, QA.\n"
+    "4) Support development → answer questions, manage the backlog, verify that the implementation meets requirements.\n"
+    "5) Maintain the product → analyze metrics, prepare changes.\n"
 )
 
-ANSWER_INSTRUCT = "Нужно ответить не более 150 слов."
 
-_WHISPER_MODEL = whisper.load_model("small")  
+ANSWER_INSTRUCT = "Каждый свой ответ подкрепляй примерами. Нужно отвечать не более 150 слов."
+
+_WHISPER_MODEL = whisper.load_model("small") 
+
+project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
+token = "87ce6187b84d0168781527c126b1769e"
+
 
 def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     """
@@ -52,23 +42,33 @@ def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     return result["text"]
 
 def generate_answer(transcript: str, temperature: float = 0.7) -> str:
-    # собираем системную часть
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'x-project-id': project_id,
+            }
    
     prompt = SYSTEM_PROMPT + ANSWER_INSTRUCT
 
     payload = {
-        "model": "chat",          # llama-server возьмёт любую модель по умолчанию
         "messages": [
-            {"role": "system", "content": prompt},
-            {"role": "user",   "content": transcript},
-        ],
-        "temperature": temperature,
-    }
+                     {"role": "user",   "content": transcript + prompt}
+            ],
+        "model": "model-run-cdyr6-shoot",
+        "frequency_penalty": 0.1,
+        "stop": "math",
+        "stream": False,
+        "temperature": 0.5,
+        "top_p": 0.95,
+        "top_k": 10,
+        "repetition_penalty": 1.03,
+        "length_penalty": 1
+        }   
 
     url = f"{LLAMA_SERVER_URL.rstrip('/')}/v1/chat/completions"
     logger.debug(f"Calling llama-server at {url}")
 
-    res = requests.post(url, json=payload, timeout=30)
+    res = requests.post(url, headers=headers, json=payload, timeout=60)
     res.raise_for_status()
     data = res.json()
 
