@@ -12,7 +12,7 @@ SYSTEM_PROMPT = (
     "A systems analyst is a bridge between business goals and development: they formulate, clarify, and control requirements so that the team can quickly build the right product.\n"
     "They:\n"
     "1) Gather requirements → interviews, workshops, document analysis.\n"
-    "2) Formalize → BPMN/UML diagrams, user stories, specifications (often according to GOST 34).\n"
+    "2) Formalize → BPMN/UML diagrams, user stories, specifications.\n"
     "3) Coordinate → discuss requirements with stakeholders, architects, UX, QA.\n"
     "4) Support development → answer questions, manage the backlog, verify that the implementation meets requirements.\n"
     "5) Maintain the product → analyze metrics, prepare changes.\n"
@@ -54,7 +54,7 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
         "messages": [
                      {"role": "user",   "content": transcript + prompt}
             ],
-        "model": "model-run-cdyr6-shoot",
+        "model": "model-run-we0hr-dust",
         "frequency_penalty": 0.1,
         "stop": "math",
         "stream": False,
