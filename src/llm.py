@@ -3,23 +3,15 @@ import whisper
 from loguru import logger
 import json
 
-from src.constants import INTERVIEW_POSTION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
+from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
-    f"You are being interviewed for the position of {INTERVIEW_POSTION} in Russia.\n"
-    "You will receive a transcription of a question. "
-    "It might be incomplete or somewhat inaccurate, but you must understand the question and answer it.\n"
-    "A systems analyst is a bridge between business goals and development: they formulate, clarify, and control requirements so that the team can quickly build the right product.\n"
-    "They:\n"
-    "1) Gather requirements → interviews, workshops, document analysis.\n"
-    "2) Formalize → BPMN/UML diagrams, user stories, specifications.\n"
-    "3) Coordinate → discuss requirements with stakeholders, architects, UX, QA.\n"
-    "4) Support development → answer questions, manage the backlog, verify that the implementation meets requirements.\n"
-    "5) Maintain the product → analyze metrics, prepare changes.\n"
+    f"Ты проходишь собеседование на должность {INTERVIEW_POSITION} в России.\n"
+    "Ты получите расшифровку вопроса.\n"
+    "Она может быть неполной или несколько неточной, но ты должен понять вопрос и ответить на него.\n"
+    "Отвечай на вопрос от первого лица. Подкрепляй каждый свой ответ соответствующими примерами. Тебе нужно ответить не более чем на 150 слов"
+
 )
-
-
-ANSWER_INSTRUCT = "Каждый свой ответ подкрепляй примерами. Нужно отвечать не более 150 слов."
 
 _WHISPER_MODEL = whisper.load_model("small") 
 
@@ -48,11 +40,12 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
         'x-project-id': project_id,
             }
    
-    prompt = SYSTEM_PROMPT + ANSWER_INSTRUCT
+    
 
     payload = {
         "messages": [
-                     {"role": "user",   "content": transcript + prompt}
+                     {"role": "system",   "content": SYSTEM_PROMPT},
+                     {"role": "user", "content": transcript}
             ],
         "model": "model-run-we0hr-dust",
         "frequency_penalty": 0.1,

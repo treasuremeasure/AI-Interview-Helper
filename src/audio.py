@@ -10,30 +10,22 @@ from src.constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
 
 MIC_ID = str(sc.default_microphone().name) #микрофон
 
+BLOCKSIZE = 2048 
 
 def record_batch(record_sec: int = RECORD_SEC) -> np.ndarray:
-    """
-    Records an audio batch for a specified duration.
+    logger.debug(f"Recording {record_sec}s …")      # f-строка была без 'f'
+    mic = sc.get_microphone(id=MIC_ID)
+    sr  = mic.samplerate            # реальная частота устройства
+    frames_total = sr * record_sec
 
-    Args:
-        record_sec (int): The duration of the recording in seconds. Defaults to the value of RECORD_SEC.
-
-    Returns:
-        np.ndarray: The recorded audio sample.
-
-    Example:
-        ```python
-        audio_sample = record_batch(5)
-        print(audio_sample)
-        ```
-    """
-    logger.debug("Recording for {record_sec} second(s)...")
-    with sc.get_microphone(
-        id=MIC_ID,
-        #include_loopback=True,
-    ).recorder(samplerate=SAMPLE_RATE) as mic:
-        audio_sample = mic.record(numframes=SAMPLE_RATE * record_sec)
-    return audio_sample
+    with mic.recorder(samplerate=sr, blocksize=BLOCKSIZE) as rec:
+        chunks = []
+        collected = 0
+        while collected < frames_total:
+            block = rec.record(numframes=BLOCKSIZE)
+            chunks.append(block)
+            collected += len(block)
+    return np.concatenate(chunks, axis=0)
 
 
 def save_audio_file(audio_data: np.ndarray, output_file_name: str = OUTPUT_FILE_NAME) -> None:

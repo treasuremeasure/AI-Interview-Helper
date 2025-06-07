@@ -1,4 +1,4 @@
-INTERVIEW_POSTION = "System Analyst"
+INTERVIEW_POSITION = "System Analyst"
 
 OUTPUT_FILE_NAME = "out.wav"  # audio file name.
 

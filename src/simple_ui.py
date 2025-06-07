@@ -19,6 +19,24 @@ class BtnInfo:
     def __init__(self, state: bool = False):
         self.state = state
 
+def readonly_multiline(key: str, lines: int) -> sg.Multiline:              # NEW
+    """Создаём Multiline, который выглядит как обычный Text,
+       но умеет переносить строки и расширяться по ширине."""
+    return sg.Multiline(
+        "",
+        key=key,
+        size=(None, lines),           # ширина = автоматическая
+        no_scrollbar=True,
+        disabled=True,                # делает поле «readonly»
+        autoscroll=False,
+        background_color=sg.theme_background_color(),
+        text_color="white",
+        expand_x=True,                # ⇐ растягиваем по X
+        expand_y=False,
+        border_width=0,
+        right_click_menu=['', ['Copy']],   # ⇐ опционально: пункт «Copy» в ПКМ
+    )
+
 
 sg.theme("DarkAmber")
 
@@ -31,8 +49,8 @@ record_status_button = sg.Button(
     metadata=BtnInfo(),
 )
 
-analyzed_text_label = get_text_area("", size=(APPLICATION_WIDTH, 2))
-answer               = get_text_area("", size=(APPLICATION_WIDTH, 120))
+analyzed_text_label = readonly_multiline("-TRANSCRIPT-", lines=3)
+answer               = readonly_multiline("-ANSWER_BOX-", lines=20)
 
 layout = [[
     sg.Column(
