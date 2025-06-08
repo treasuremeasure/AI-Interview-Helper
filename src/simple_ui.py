@@ -6,34 +6,26 @@ from src import audio, llm
 from src.constants import APPLICATION_WIDTH, APPLICATION_HEIGHT, OFF_IMAGE, ON_IMAGE
 
 
-def get_text_area(text: str, size: tuple) -> sg.Text:
-    return sg.Text(
-        text,
-        size=size,
-        background_color=sg.theme_background_color(),
-        text_color="white",
-    )
-
-
 class BtnInfo:
     def __init__(self, state: bool = False):
         self.state = state
 
-def readonly_multiline(key: str, lines: int) -> sg.Multiline:              # NEW
+def readonly_multiline(key: str, lines: int, width: int = 120, default_text: str = "") -> sg.Multiline:              # NEW
     """Создаём Multiline, который выглядит как обычный Text,
        но умеет переносить строки и расширяться по ширине."""
     return sg.Multiline(
-        "",
+        default_text,
         key=key,
-        size=(None, lines),           # ширина = автоматическая
+        size=(width, lines),           # ширина = автоматическая
         no_scrollbar=True,
+        wrap_lines=True,
         disabled=True,                # делает поле «readonly»
         autoscroll=False,
         background_color=sg.theme_background_color(),
         text_color="white",
-        expand_x=True,                # ⇐ растягиваем по X
+        expand_x=False,                
         expand_y=False,
-        border_width=0,
+        border_width=0, 
         right_click_menu=['', ['Copy']],   # ⇐ опционально: пункт «Copy» в ПКМ
     )
 
@@ -49,18 +41,17 @@ record_status_button = sg.Button(
     metadata=BtnInfo(),
 )
 
-analyzed_text_label = readonly_multiline("-TRANSCRIPT-", lines=3)
-answer               = readonly_multiline("-ANSWER_BOX-", lines=20)
+analyzed_text_label = readonly_multiline("-TRANSCRIPT-", lines=4, width=60)
+answer              = readonly_multiline("-ANSWER_BOX-", lines=30, width=100)
 
 layout = [[
     sg.Column(
         [
-            [sg.Text("Нажми R для записи", size=(int(APPLICATION_WIDTH * 0.8), 2)),
-             record_status_button],
+            [sg.Text("Нажми R для записи", size=(int(APPLICATION_WIDTH * 0.8), 2)), record_status_button],
             [analyzed_text_label],
             [sg.Text("Ответ:")],
             [answer],
-            [sg.Button("Отмена", key="Cancel")],          # ключ -- для закрытия
+            [sg.Button("Отмена", key="Cancel")],
         ],
         scrollable=True,
         vertical_scroll_only=True,
@@ -71,7 +62,7 @@ layout = [[
 ]]
 
 WINDOW = sg.Window(
-    "Keyboard Test",
+    "Твой ИИ помощник",
     layout,
     return_keyboard_events=True,
     use_default_focus=False,

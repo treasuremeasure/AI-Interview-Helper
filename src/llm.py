@@ -7,10 +7,9 @@ from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
     f"Ты проходишь собеседование на должность {INTERVIEW_POSITION} в России.\n"
-    "Ты получите расшифровку вопроса.\n"
-    "Она может быть неполной или несколько неточной, но ты должен понять вопрос и ответить на него.\n"
-    "Отвечай на вопрос от первого лица. Подкрепляй каждый свой ответ соответствующими примерами. Тебе нужно ответить не более чем на 150 слов"
-
+    "Тебе будет передан текст вопроса. Он может быть неполным или немного искажённым — постарайся понять суть и дать развёрнутый ответ.\n"
+    "Отвечай от первого лица, как будто ты кандидат. Каждый ответ сопровождай конкретными примерами из практики или гипотетических ситуаций.\n"
+    "Ответ должен быть кратким — не более 150 слов."
 )
 
 _WHISPER_MODEL = whisper.load_model("small") 
@@ -49,13 +48,13 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
             ],
         "model": "model-run-we0hr-dust",
         "frequency_penalty": 0.1,
-        "stop": "math",
         "stream": False,
         "temperature": 0.5,
         "top_p": 0.95,
         "top_k": 10,
         "repetition_penalty": 1.03,
-        "length_penalty": 1
+        "length_penalty": 1,
+        "max_tokens": 500
         }   
 
     url = f"{LLAMA_SERVER_URL.rstrip('/')}/v1/chat/completions"
