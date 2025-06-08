@@ -12,10 +12,11 @@ SPEAKER_ID = str(sc.default_speaker().name)   #спикер
 #MIC_ID = str(sc.default_microphone().name) #микрофон
 
 def record_batch(record_sec=5):
-    speaker = sc.get_speaker(id=SPEAKER_ID)
-    with speaker.recorder(samplerate=SAMPLE_RATE) as rec:
+    mic = sc.default_microphone()
+    with mic.recorder(samplerate=SAMPLE_RATE, channels=1) as rec:
         audio = rec.record(numframes=SAMPLE_RATE * record_sec)
     return audio
+
 
 
 def save_audio_file(audio_data: np.ndarray,
