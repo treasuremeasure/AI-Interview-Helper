@@ -2,7 +2,7 @@ INTERVIEW_POSITION = "System Analyst"
 
 OUTPUT_FILE_NAME = "out.wav"  # audio file name.
 
-SAMPLE_RATE = 44100  # [Hz]. sampling rate.
+SAMPLE_RATE = 48000  # [Hz]. sampling rate.
 RECORD_SEC = 1  # [sec]. duration recording audio.
 
 APPLICATION_WIDTH = 500
