@@ -7,13 +7,13 @@ from loguru import logger
 
 from src.constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
 
-#SPEAKER_ID = str(sc.default_speaker().name)   #спикер
+SPEAKER_ID = str(sc.default_speaker().name)   #спикер
 
-MIC_ID = str(sc.default_microphone().name) #микрофон
+#MIC_ID = str(sc.default_microphone().name) #микрофон
 
 def record_batch(record_sec=5):
-    mic = sc.get_microphone(id=MIC_ID)
-    with mic.recorder(samplerate=SAMPLE_RATE) as rec:
+    speaker = sc.get_speaker(id=SPEAKER_ID)
+    with speaker.recorder(samplerate=SAMPLE_RATE) as rec:
         audio = rec.record(numframes=SAMPLE_RATE * record_sec)
     return audio
 

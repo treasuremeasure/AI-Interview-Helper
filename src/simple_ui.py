@@ -100,7 +100,8 @@ while True:
     # запись завершилась ------------------------------------------------------
     elif event == "-RECORDING-":
         logger.debug("Recording finished, start transcription…")
-        analyzed_text_label.update("Start analyzing…")
+        record_status_button.metadata.state = False  # Сбрасываем состояние кнопки
+        analyzed_text_label.update("Анализирую...")
         WINDOW.perform_long_operation(llm.transcribe_audio, "-WHISPER COMPLETED-")
 
     # whisper вернул текст ----------------------------------------------------
