@@ -3,6 +3,7 @@ import whisper
 from loguru import logger
 import json
 
+
 from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
@@ -12,7 +13,7 @@ SYSTEM_PROMPT = (
     "Ответ должен быть кратким — не более 150 слов."
 )
 
-_WHISPER_MODEL = whisper.load_model("small") 
+_WHISPER_MODEL = whisper.load_model("medium") 
 
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
@@ -29,7 +30,7 @@ def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
         str: Расшифрованный текст.
     """
     # вынужденно отключаем fp16 на CPU / WSL, если нет GPU
-    result = _WHISPER_MODEL.transcribe(path_to_file, fp16=False)
+    result = _WHISPER_MODEL.transcribe(path_to_file, fp16=False, language = 'ru')
     return result["text"]
 
 def generate_answer(transcript: str, temperature: float = 0.7) -> str:

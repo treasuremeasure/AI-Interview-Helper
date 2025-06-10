@@ -3,6 +3,7 @@ import numpy as np
 import soundcard as sc
 import soundfile as sf
 from loguru import logger
+import librosa
 
 from src.constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
 
@@ -33,23 +34,14 @@ def record_batch(record_sec: int = RECORD_SEC) -> np.ndarray:
         audio_sample = mic.record(numframes=SAMPLE_RATE * record_sec)
     return audio_sample
 
+def trim_silence(audio: np.ndarray, top_db: int = 30) -> np.ndarray:
+    if audio.ndim > 1:
+        audio = audio[:, 0]  # берём только 1 канал
+    trimmed_audio, _ = librosa.effects.trim(audio, top_db=top_db)
+    return trimmed_audio
+
 
 def save_audio_file(audio_data: np.ndarray, output_file_name: str = OUTPUT_FILE_NAME) -> None:
-    """
-    Saves an audio data array to a file.
-
-    Args:
-        audio_data (np.ndarray): The audio data to be saved.
-        output_file_name (str): The name of the output file. Defaults to the value of OUTPUT_FILE_NAME.
-
-    Returns:
-        None
-
-    Example:
-        ```python
-        audio_data = np.array([0.1, 0.2, 0.3])
-        save_audio_file(audio_data, "output.wav")
-        ```
-    """
     logger.debug(f"Saving audio file to {output_file_name}...")
-    sf.write(file=output_file_name, data=audio_data, samplerate=SAMPLE_RATE)
+    trimmed = trim_silence(audio_data)
+    sf.write(file=output_file_name, data=trimmed, samplerate=SAMPLE_RATE)
