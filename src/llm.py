@@ -14,7 +14,7 @@ SYSTEM_PROMPT = (
     "Ответ должен быть кратким — не более 150 слов."
 )
 
-_WHISPER_MODEL = whisper.load_model("base") 
+_WHISPER_MODEL = whisper.load_model("medium") 
 
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
