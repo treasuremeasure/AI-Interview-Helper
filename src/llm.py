@@ -1,8 +1,8 @@
 import requests
 import whisper
 from loguru import logger
-import json
 import time
+import torch
 
 
 from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
@@ -14,11 +14,11 @@ SYSTEM_PROMPT = (
     "Ответ должен быть кратким — не более 150 слов."
 )
 
-_WHISPER_MODEL = whisper.load_model("medium") 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+_WHISPER_MODEL = whisper.load_model("medium", device=device) 
 
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
-
 
 def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     """
@@ -50,7 +50,7 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
                      {"role": "system",   "content": SYSTEM_PROMPT},
                      {"role": "user", "content": transcript}
             ],
-        "model": "model-run-we0hr-dust",
+        "model": "model-run-jbq8l-famous",
         "frequency_penalty": 0.1,
         "stream": False,
         "temperature": 0.5,
