@@ -3,12 +3,13 @@ import whisper
 from loguru import logger
 import time
 import torch
+from src.whispercpp_transcriber import transcribe_with_cpp
 
 
 from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
 SYSTEM_PROMPT = (
-    f"Ты проходишь собеседование на должность {INTERVIEW_POSITION} в России.\n"
+    f"Ты проходишь собесеsдование на должность {INTERVIEW_POSITION} в России.\n"
     "Тебе будет передан текст вопроса. Он может быть неполным или немного искажённым — постарайся понять суть и дать развёрнутый ответ.\n"
     "Отвечай от первого лица, как будто ты кандидат. Каждый ответ сопровождай конкретными примерами из практики или гипотетических ситуаций.\n"
     "Ответ должен быть кратким — не более 150 слов."
@@ -34,7 +35,7 @@ def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     # вынужденно отключаем fp16 на CPU / WSL, если нет GPU
     result = _WHISPER_MODEL.transcribe(path_to_file, fp16=False, language='ru')
     print(f"📝 Transcription took {time.time() - start:.3f} seconds")  # лог времени
-    return result["text"]
+    return transcribe_with_cpp(path_to_file)
 
 def generate_answer(transcript: str, temperature: float = 0.7) -> str:
 
