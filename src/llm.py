@@ -27,7 +27,6 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
         'x-project-id': project_id,
             }
    
-    
 
     payload = {
         "messages": [
