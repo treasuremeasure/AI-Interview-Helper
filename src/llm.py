@@ -65,23 +65,18 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
                      {"role": "system",   "content": SYSTEM_PROMPT},
                      {"role": "user", "content": transcript}
             ],
-        "model": "model-run-jbq8l-famous",
-        "frequency_penalty": 0.1,
+        "model": "deepseek-r1:70b-llama-distill-q4_K_M",
         "stream": False,
-        "temperature": 0.5,
-        "top_p": 0.95,
-        "top_k": 10,
-        "repetition_penalty": 1.03,
-        "length_penalty": 1,
-        "max_tokens": 500
+        "stop": ["<think></think>"]
         }   
 
-    url = f"{LLAMA_SERVER_URL.rstrip('/')}/v1/chat/completions"
-    logger.debug(f"Calling llama-server at {url}")
-
+    url = f"{LLAMA_SERVER_URL.rstrip('/')}/api/chat"
     res = requests.post(url, headers=headers, json=payload, timeout=60)
     res.raise_for_status()
     data = res.json()
 
-    # возвращаем текст из первого варианта
-    return data["choices"][0]["message"]["content"]
+    if "error" in data:
+        raise RuntimeError(data["error"])
+
+    answer = data["message"]["content"]       # ← правильное поле
+    return answer
