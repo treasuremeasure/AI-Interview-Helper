@@ -18,7 +18,7 @@ SYSTEM_PROMPT = (
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
 
-FWS_URL = "http://127.0.0.1:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
+FWS_URL = "http://87.228.90.113:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
 FWS_LANG = "ru" 
 
 def _resample_to_16k(path: str) -> str:
