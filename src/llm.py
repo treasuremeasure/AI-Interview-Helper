@@ -1,12 +1,10 @@
 import requests
 from loguru import logger
-import time
-import asyncio
-import numpy as np
+import os
 import soundfile as sf
-from wyoming.client import AsyncTcpClient   
-from wyoming.audio import AudioStart, AudioChunk, AudioStop
-from wyoming.event import Event
+import librosa
+import numpy as np
+import tempfile
 
 from src.constants import INTERVIEW_POSITION, OUTPUT_FILE_NAME, LLAMA_SERVER_URL
 
@@ -20,49 +18,38 @@ SYSTEM_PROMPT = (
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
 
-FAST_WHISPER_HOST = "87.228.102.104"   # вынесите в .env, если нужно
-FAST_WHISPER_PORT = 10300
+FWS_URL = "http://127.0.0.1:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
+FWS_LANG = "ru" 
 
-async def _wyoming_transcribe(path: str) -> str:
-    """Отправляет wav/ogg/mp3 в faster-whisper через Wyoming."""
-    # 1. читаем файл
+def _resample_to_16k(path: str) -> str:
+    """
+    Любой wav/ogg/mp3 → временный 16-кГц mono-WAV, который понимает Whisper.
+    Возвращает путь к новому файлу.
+    """
     audio, sr = sf.read(path, always_2d=False)
-    if audio.ndim == 2:                         # стерео → моно
+    if audio.ndim == 2:                        # стерео → моно
         audio = audio[:, 0]
     if sr != 16_000:
-        import librosa
-        audio = librosa.resample(audio.astype(np.float32), orig_sr=sr,  target_sr=16_000)
-    pcm_int16 = (audio * 32767).astype(np.int16).tobytes()
-
-    # 2. шлём по Wyoming
-    async with AsyncTcpClient(FAST_WHISPER_HOST, FAST_WHISPER_PORT) as client:
-
-        # 0) запрос на транскрипцию (обязательно)
-        await client.write_event(Event("transcribe", {"language": "ru"}))
-
-        # 1) начало аудио  ### FIX: все три параметра
-        await client.write_event(
-            AudioStart(rate=16_000, width=2, channels=1).to_event()
-        )
-
-        # 2) кусок аудио   ### FIX: те же параметры + payload
-        await client.write_event(
-            AudioChunk(pcm_int16, rate=16_000, width=2, channels=1).to_event()
-        )
-
-        # 3) конец аудио
-        await client.write_event(AudioStop().to_event())
-
-
-        # 3. ждём ответ
-        while True:
-            evt = await asyncio.wait_for(client.read_event(), timeout=30)
-            if evt.type == "transcript" and evt.data.get("is_final", True):
-                return evt.data["text"]
+        audio = librosa.resample(audio.astype(np.float32), orig_sr=sr, target_sr=16_000)
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".wav")
+    os.close(tmp_fd)
+    sf.write(tmp_path, audio, 16_000, subtype="PCM_16")
+    return tmp_path
 
 def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
-    """Транскрипция через faster-whisper (Wyoming)."""
-    return asyncio.run(_wyoming_transcribe(path_to_file))
+    """Транскрипция через faster-whisper-server (REST)."""
+    wav16 = _resample_to_16k(path_to_file)
+
+    with open(wav16, "rb") as f:
+        files = {"file": ("audio.wav", f, "audio/wav")}
+        data = {"language": FWS_LANG}          # можно опустить, если LANGUAGE задан через env
+        logger.debug(f"POST {FWS_URL}")
+        resp = requests.post(FWS_URL, files=files, data=data, timeout=120)
+        resp.raise_for_status()
+        text = resp.json()["text"]
+
+    os.remove(wav16)                           # чистим временный файл
+    return text
 
 
 def generate_answer(transcript: str, temperature: float = 0.7) -> str:
