@@ -18,7 +18,7 @@ SYSTEM_PROMPT = (
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
 
-FWS_URL = "http://87.228.90.113:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
+FWS_URL = "http://87.228.100.29:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
 FWS_LANG = "ru" 
 
 def _resample_to_16k(path: str) -> str:
@@ -65,18 +65,25 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
                      {"role": "system",   "content": SYSTEM_PROMPT},
                      {"role": "user", "content": transcript}
             ],
-        "model": "deepseek-r1:70b-llama-distill-q4_K_M",
+        "model": "deepseek",
+        "frequency_penalty": 0.1,
         "stream": False,
-        "stop": ["<think></think>"]
+        "temperature": 0.5,
+        "top_p": 0.95,
+        "top_k": 10,
+        "repetition_penalty": 1.03,
+        "length_penalty": 1,
+        "stop": ["math"]
         }   
 
-    url = f"{LLAMA_SERVER_URL.rstrip('/')}/api/chat"
+    url = f"{LLAMA_SERVER_URL.rstrip('/')}/v1/chat/completions"
+    logger.debug(f"Calling llama-server at {url}")
+
     res = requests.post(url, headers=headers, json=payload, timeout=60)
     res.raise_for_status()
     data = res.json()
 
-    if "error" in data:
-        raise RuntimeError(data["error"])
+    # возвращаем текст из первого варианта
+    return data["choices"][0]["message"]["content"]
 
-    answer = data["message"]["content"]       # ← правильное поле
-    return answer
+    

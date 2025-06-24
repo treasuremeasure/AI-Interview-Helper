@@ -17,8 +17,7 @@ def readonly_multiline(key: str, lines: int, width: int = 120, default_text: str
         default_text,
         key=key,
         size=(width, lines),           # ширина = автоматическая
-        no_scrollbar=True,
-        wrap_lines=True,
+        no_scrollbar=True, 
         disabled=True,                # делает поле «readonly»
         autoscroll=False,
         background_color=sg.theme_background_color(),
