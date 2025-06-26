@@ -18,8 +18,7 @@ SYSTEM_PROMPT = (
 project_id = "bf69751b-65af-4457-9a4c-a8d9453a6b06"
 token = "87ce6187b84d0168781527c126b1769e"
 
-FWS_URL = "http://87.228.100.29:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера
-FWS_LANG = "ru" 
+FWS_URL = "http://87.228.101.79:8000/v1/audio/transcriptions"        # ← порт 8000 вашего контейнера 
 
 def _resample_to_16k(path: str) -> str:
     """
@@ -42,9 +41,8 @@ def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
 
     with open(wav16, "rb") as f:
         files = {"file": ("audio.wav", f, "audio/wav")}
-        data = {"language": FWS_LANG}          # можно опустить, если LANGUAGE задан через env
         logger.debug(f"POST {FWS_URL}")
-        resp = requests.post(FWS_URL, files=files, data=data, timeout=120)
+        resp = requests.post(FWS_URL, files=files, timeout=120)
         resp.raise_for_status()
         text = resp.json()["text"]
 
@@ -68,10 +66,10 @@ def generate_answer(transcript: str, temperature: float = 0.7) -> str:
         "model": "deepseek",
         "frequency_penalty": 0.1,
         "stream": False,
-        "temperature": 0.5,
-        "top_p": 0.95,
-        "top_k": 10,
-        "repetition_penalty": 1.03,
+        "temperature": 0.65,
+        "top_p": 0.9,
+        "top_k": 40,
+        "repetition_penalty": 1.05,
         "length_penalty": 1,
         "stop": ["math"]
         }   

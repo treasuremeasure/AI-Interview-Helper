@@ -90,6 +90,8 @@ while True:
 
         if not recording_now:
             logger.debug("Starting recording…")
+            analyzed_text_label.update("Записываю…")
+            answer.update("") 
             WINDOW.perform_long_operation(background_recording_loop, "-RECORDING-")
             record_status_button.update(image_data=ON_IMAGE)
         else:
