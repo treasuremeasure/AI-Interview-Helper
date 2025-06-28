@@ -4,3 +4,4 @@ soundcard == 0.4.2
 soundfile == 0.12.1
 loguru == 0.7.2
 librosa == 0.11.0
+pyinstaller == 6.14.1
