@@ -1,7 +1,0 @@
-numpy == 2.2.6       
-https://raw.githubusercontent.com/egm3387/PySimpleGUI-4.60.5/main/PySimpleGUI-4.60.5-py3-none-any.whl
-soundcard == 0.4.2
-soundfile == 0.12.1
-loguru == 0.7.2
-librosa == 0.11.0
-pyinstaller == 6.14.1

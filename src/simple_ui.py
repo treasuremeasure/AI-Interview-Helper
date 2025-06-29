@@ -1,6 +1,8 @@
 import numpy as np
 import PySimpleGUI as sg
 from loguru import logger
+import threading
+import time
 
 from src import audio, llm
 from src.constants import APPLICATION_WIDTH, APPLICATION_HEIGHT, OFF_IMAGE, ON_IMAGE
@@ -10,22 +12,21 @@ class BtnInfo:
     def __init__(self, state: bool = False):
         self.state = state
 
-def readonly_multiline(key: str, lines: int, width: int = 120, default_text: str = "") -> sg.Multiline:              # NEW
-    """Создаём Multiline, который выглядит как обычный Text,
-       но умеет переносить строки и расширяться по ширине."""
+
+def readonly_multiline(key: str, lines: int, width: int = 120, default_text: str = "") -> sg.Multiline:
     return sg.Multiline(
         default_text,
         key=key,
-        size=(width, lines),           # ширина = автоматическая
-        no_scrollbar=True, 
-        disabled=True,                # делает поле «readonly»
+        size=(width, lines),
+        no_scrollbar=True,
+        disabled=True,
         autoscroll=False,
         background_color=sg.theme_background_color(),
         text_color="white",
-        expand_x=False,                
+        expand_x=False,
         expand_y=False,
-        border_width=0, 
-        right_click_menu=['', ['Copy']],   # ⇐ опционально: пункт «Copy» в ПКМ
+        border_width=0,
+        right_click_menu=['', ['Copy']],
     )
 
 
@@ -41,7 +42,7 @@ record_status_button = sg.Button(
 )
 
 analyzed_text_label = readonly_multiline("-TRANSCRIPT-", lines=4, width=60)
-answer              = readonly_multiline("-ANSWER_BOX-", lines=30, width=100)
+answer = readonly_multiline("-ANSWER_BOX-", lines=30, width=100)
 
 layout = [[
     sg.Column(
@@ -77,13 +78,22 @@ def background_recording_loop() -> None:
     audio.save_audio_file(audio_data)
 
 
+def stream_answer_to_ui(transcript):
+    answer.update("")
+    buffer = ""
+    for chunk in llm.stream_answer(transcript):
+        buffer += chunk
+        answer.update(buffer)
+        time.sleep(0.03)  # сглаживает вывод
+
+
 while True:
     event, values = WINDOW.read()
     if event in ("Cancel", sg.WIN_CLOSED):
         logger.debug("Closing…")
         break
 
-    # клавиша R ---------------------------------------------------------------
+    # клавиша R
     if event in ("r", "R"):
         recording_now = record_status_button.metadata.state
         record_status_button.metadata.state = not recording_now
@@ -91,31 +101,28 @@ while True:
         if not recording_now:
             logger.debug("Starting recording…")
             analyzed_text_label.update("Записываю…")
-            answer.update("") 
+            answer.update("")
             WINDOW.perform_long_operation(background_recording_loop, "-RECORDING-")
             record_status_button.update(image_data=ON_IMAGE)
         else:
             logger.debug("Stopping recording…")
             record_status_button.update(image_data=OFF_IMAGE)
 
-    # запись завершилась ------------------------------------------------------
+    # запись завершена
     elif event == "-RECORDING-":
         logger.debug("Recording finished, start transcription…")
-        record_status_button.metadata.state = False  # Сбрасываем состояние кнопки
+        record_status_button.metadata.state = False
         analyzed_text_label.update("Анализирую...")
         WINDOW.perform_long_operation(llm.transcribe_audio, "-WHISPER COMPLETED-")
 
-    # whisper вернул текст ----------------------------------------------------
+    # Whisper вернул текст
     elif event == "-WHISPER COMPLETED-":
         transcript = values["-WHISPER COMPLETED-"]
         analyzed_text_label.update(transcript)
 
         answer.update("Генерация ответа…")
-        WINDOW.perform_long_operation(
-            lambda: llm.generate_answer(transcript, temperature=0.7),
-            "-ANSWER-",
-        )
+        WINDOW.perform_long_operation(lambda: stream_answer_to_ui(transcript), "-STREAMING-DONE-")
 
-    # LLM вернул ответ --------------------------------------------------------
-    elif event == "-ANSWER-":
-        answer.update(values["-ANSWER-"])
+    # Поток завершён
+    elif event == "-STREAMING-DONE-":
+        logger.debug("Streaming finished.")
